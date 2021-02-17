@@ -1,0 +1,37 @@
+load a
+%所测数据各列依次为身高，体重，肺活量，50米跑，立定跳远，坐位体前屈
+%基本的统计量 最小、大值，平均值 中位数，标准差方差 偏度 峰度
+min_t=min(test);
+max_t=max(test);
+mean_t=mean(test);
+med=median(test);
+std_t=std(test);
+var_t=var(test);
+ske_t=skewness(test);
+kur_t=kurtosis(test);
+result=[min_t;max_t;mean_t;med;std_t;var_t;ske_t;kur_t];
+%算皮尔逊相关系数以及假设检验的p
+[r,p]=corrcoef(test);
+%皮尔逊相关系数检验 身高和体重相关系数检验 r1=0.0580 双尾检验
+r12=0.0580;
+n=length(test(:,1));
+tt=r12*sqrt((n-2)/(1-r12^2));
+p12=2*(1-tcdf(tt,n-2));%这里计算的p12与上述矩阵p（1,2）一样故默认是双尾检验
+%检验数据的是否符合正态分布
+%大样本故采用基本jb检验,一次只能检验一组数据
+h1=zeros(1,6);
+p1=zeros(1,6);
+for ii=1:6
+    [h,p]=jbtest(test(:,ii),0.05);
+    h1(ii)=h;
+    p1(ii)=p;
+end 
+h1,p1
+%计算出来的数据都不符合正态分布，故不能采用person相关系数进行衡量
+%计算斯皮尔相关系数 和假设检验的p值
+[r1,p1]=corr(test,'type','spearman');
+%假设检验,求p12和MATLAB默认对比
+r112=r1(1,2);
+jiany=r112*sqrt(n-1);
+p112=2*(1-normcdf(jiany));%计算结果基本相同
+

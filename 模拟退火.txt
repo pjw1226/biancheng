@@ -1,0 +1,505 @@
+%模拟退火例子1求函数的极值
+function y = obj(x)
+    y = 21.5+x(1)*sin(4*pi*x(1))+ x(2)*sin(20*pi*x(2));
+end
+clc,clear
+tic
+x1=-3:0.01:12.1;
+x2=4.1:0.01:5.8;
+[X,Y]=meshgrid(x1,x2);
+Z= 21.5+X.*sin(4*pi.*X)+ Y.*sin(pi*20.*Y);
+mesh(X,Y,Z)
+%设置初始参数
+T=1000;
+a=0.95;
+lb=[-3,4.1];%变量下限
+ub=[12.1,5.8];%变量上限
+n=2;%自变量个数
+m=500;%时间 外循环迭代次数
+k=200;%一个温度下迭代的次数
+%产生一个初始解
+r=rand(1);
+x0=r*lb+(1-r)*ub;
+y0=obj(x0);
+ymax=zeros(1,m);
+for i=1:m
+    for ii=1:k
+        %产生新解的过程
+        z1=randn(1,n);%正态分布产生
+        z=z1(j)/sqrt(sum(z1.^2));
+        xnew=x0+T*z;
+        x1=zeros(1,n);
+        %判断产生的新解是否满足定义域，不满足进行调整
+        for jj=1:n
+            if xnew(jj)<lb(jj)
+                x1(jj)=x0(jj)+rand(1)*(lb(jj)-x0(jj));
+            elseif xnew(jj)>ub(jj) 
+                x1(jj)=x0(jj)+rand(1)*(ub(jj)-x0(jj));
+            else
+                x1(jj)=xnew(jj);
+            end
+        end
+        %判断是否取新解
+        y1=obj(x1);
+        if y1>y0
+            x0=x1;
+            y0=y1;
+        else
+            p=exp(-((y0-y1)/T));
+            if rand(1)<=p
+                x0=x1;
+                y0=y1;
+            end
+        end
+    end
+    ymax(1,i)=y0;
+    T=T*a;
+end
+title(['最优解为：',num2str(y0)])
+figure(2)
+plot(ymax)
+toc
+
+%  y = x(1)^2+x(2)^2-x(1)*x(2)-10*x(1)-4*x(2)+60;的极小值
+clc,clear
+tic
+x1=-15:1:15;
+x2=-15:1:15;
+[X,Y]=meshgrid(x1,x2);
+Z= X.^2+Y.^2-X.*Y-10*X-4*Y+60;
+mesh(X,Y,Z)
+hold on 
+%设置初始参数
+T=1000;
+a=0.95;
+lb=[-15,-15];%变量下限
+ub=[15,15];%变量上限
+n=2;%自变量个数
+m=300;%时间 外循环迭代次数
+k=200;%一个温度下迭代的次数
+%产生一个初始解
+r=rand(1);
+x0=r*lb+(1-r)*ub;
+y0=obj(x0);
+scatter3(x0(1),x0(2),y0);
+h=scatter3(x0(1),x0(2),y0,'*r');
+ymin=zeros(1,m);
+for i=1:m
+    for ii=1:k
+        %产生新解的过程
+        z1=randn(1,n);%正态分布产生
+        z=z1/sqrt(sum(z1.^2));
+        xnew=x0+T*z;
+        x1=zeros(1,n);
+        %判断产生的新解是否满足定义域，不满足进行调整
+        for jj=1:n
+            if xnew(jj)<lb(jj)
+                x1(jj)=x0(jj)+rand(1)*(lb(jj)-x0(jj));
+            elseif xnew(jj)>ub(jj) 
+                x1(jj)=x0(jj)+rand(1)*(ub(jj)-x0(jj));
+            else
+                x1(jj)=xnew(jj);
+            end
+        end
+        %判断是否取新解
+        y1=obj(x1);
+        if y1<y0
+            x0=x1;
+            y0=y1;
+        else
+            p=exp(-((y1-y0)/T));
+            if rand(1)<=p
+                x0=x1;
+                y0=y1;
+            end
+        end
+    end
+    ymin(1,i)=y0;
+    T=T*a;
+    pause(0.02)  % 暂停一段时间后(单位：秒)再接着画图
+    h.XData = x0(1);  % 更新散点图句柄的x轴的数据（此时解的位置在图上发生了变化）
+    h.YData = x0(2); % 更新散点图句柄的y轴的数据（此时解的位置在图上发生了变化）
+    h.ZData = y0;  % 更新散点图句柄的z轴的数据（此时粒子的位置在图上发生了变化）
+end
+pause(0.5)
+h.XData = [];  h.YData = [];  h.ZData = [];  % 将原来的散点删除
+scatter3(x0(1), x0(2), y0,'*r');  % 在最小值处重新标上散点
+title(['最优解为：',num2str(y0)])
+figure(2)
+plot(ymin)
+toc
+
+
+%模拟退火例子2 买书问题加了条件，当买书大于88时，书店包邮
+tic
+rng('shuffle')  % 控制随机数的生成，否则每次打开matlab得到的结果都一样
+% M是每本书在每家店的价格; freight表示每家店的运费
+M=[31	31	41	21	25	28	23	34	38	29	38	33	32	24	23	20	23	26	21	32;
+40	27	38	26	23	29	24	22	37	29	32	34	31	27	31	22	26	27	25	27;
+35	25	41	20	26	21	37	24	34	22	42	31	37	26	28	23	23	21	26	28;
+33	26	22	29	38	25	34	32	34	24	27	25	26	31	39	34	21	21	41	34;
+33	29	36	24	21	24	33	28	25	29	24	26	26	29	37	24	25	25	32	27;
+25	32	20	21	20	32	42	22	33	24	35	28	38	26	34	21	39	25	40	23;
+35	22	35	29	29	26	38	30	27	21	25	30	33	32	30	32	25	23	26	23;
+36	22	39	26	34	25	32	23	35	29	20	32	34	31	25	24	38	25	29	25;
+32	23	22	21	27	22	20	30	27	24	41	27	33	27	29	22	31	26	25	24;
+27	28	36	22	38	27	29	33	29	25	29	33	34	25	24	22	37	27	42	30;
+39	28	26	27	37	28	23	31	35	27	30	28	20	32	31	21	32	31	43	21;
+22	28	38	33	40	23	43	30	35	24	23	26	36	23	34	24	40	24	41	30;
+30	25	27	32	27	30	40	27	36	22	30	29	21	32	41	33	33	29	31	31;
+34	21	27	29	25	21	36	33	21	28	21	30	35	22	22	24	40	27	25	23;
+31	27	24	25	39	23	40	30	22	28	38	31	21	29	21	25	40	22	31	35;
+];
+freight=[10 10 14 7 12 5 10 8 14 9 12 6 11 5 9]';
+[s, b] = size(M);  % s是书店的数量，b是要购买的书的数量
+
+%% 参数初始化
+T0 = 1000;   % 初始温度
+T = T0; % 迭代中温度会发生改变，第一次迭代时温度就是T0
+maxgen = 500;  % 最大迭代次数
+Lk = 200;  % 每个温度下的迭代次数
+alfa = 0.95;  % 温度衰减系数
+
+%%  随机生成一个初始解
+way0 = randi([1, s],1,b); % 在1-s这些整数中随机抽取一个1*b的向量，表示这b本书分别在哪家书店购买
+money0 = calculate_money(way0,freight,M,s,b); % 调用我们自己写的calculate_money函数计算这个方案的花费
+
+%% 定义一些保存中间过程的量，方便输出结果和画图
+min_money = money0;     % 初始化找到的最佳的解对应的花费为money0
+MONEY = zeros(maxgen,1); % 记录每一次外层循环结束后找到的min_money (方便画图）
+
+%% 模拟退火过程
+for iter = 1 : maxgen  % 外循环, 我这里采用的是指定最大迭代次数
+    for i = 1 : Lk  %  内循环，在每个温度下开始迭代
+        way1 = gen_new_way(way0,s,b);  % 调用我们自己写的gen_new_way函数生成新的方案
+        money1 = calculate_money(way1,freight,M,s,b); % 计算新方案的花费
+        if money1 < money0    % 如果新方案的花费小于当前方案的花费
+            way0 = way1; % 更新当前方案为新方案
+            money0 = money1;
+        else
+            p = exp(-(money1 - money0)/T); % 根据Metropolis准则计算一个概率
+            if rand(1) < p   % 生成一个随机数和这个概率比较，如果该随机数小于这个概率
+                way0 = way1;
+                money0 = money1;
+            end
+        end
+        % 判断是否要更新找到的最佳的解
+        if money0 < min_money  % 如果当前解更好，则对其进行更新
+            min_money = money0;  % 更新最小的花费
+            best_way = way0;  % 更新找到的最佳方案
+        end
+    end
+    MONEY(iter) = min_money; % 保存本轮外循环结束后找到的最小花费
+    T = alfa*T;   % 温度下降
+end
+
+disp('最佳的方案是：'); disp(mat2str(best_way))
+disp('此时最优值是：'); disp(min_money)
+
+%% 画出每次迭代后找到的最佳方案的图形
+figure
+plot(1:maxgen,MONEY,'b-');
+xlabel('迭代次数');
+ylabel('最小花费');
+toc
+%计算费用的函数
+function  money =  calculate_money(way,freight,M,s,b)
+% 输入：way: 购买方案；fright:运费;  M: 每本书在每家店的价格; b：一共要购买几本书
+   index = unique(way);  % 在哪些商店购买了商品，因为我们等下要计算运费 s为书店个数
+   moneyy1 = sum(freight(index)); % 计算买书花费的运费
+    % 计算书的售价
+    money2=zeros(size(M));
+    moneyy=0;
+    for i = 1:b 
+        money2(way(i),i)=  M(way(i),i);  
+    end
+    for j=1:s
+        if sum(money2(j,:))>=88
+           moneyy=moneyy-freight(j);
+        end
+    end
+   money=moneyy1+sum(sum(money2))+moneyy;
+end
+%产生新的买书方法的函数
+function way1 = gen_new_way(way0, s, b)
+% way0：原来的买书方案，是一个1*b的向量，每一个元素都位于1-s之间
+        index =  randi([1, b],1) ;  % 看哪一本书要更换书店购买
+        way1 = way0;  % 将原来的方案赋值给way1
+        way1(index) = randi([1, s],1);  % 将way1中的第index本书换一个书店购买   
+end
+
+%% 模拟退火求tsp问题
+%% 模拟退火解决TSP问题(很多地方我直接引用的蒙特卡罗模拟里面的代码)
+
+tic
+rng('shuffle')  % 控制随机数的生成，否则每次打开matlab得到的结果都一样
+% https://ww2.mathworks.cn/help/matlab/math/why-do-random-numbers-repeat-after-startup.html
+% https://ww2.mathworks.cn/help/matlab/ref/rng.html
+clear;clc
+% 38个城市，TSP数据集网站(http://www.tsp.gatech.edu/world/djtour.html) 上公测的最优结果6656。
+coord = [11003.611100,42102.500000;11108.611100,42373.888900;11133.333300,42885.833300;11155.833300,42712.500000;11183.333300,42933.333300;11297.500000,42853.333300;11310.277800,42929.444400;11416.666700,42983.333300;11423.888900,43000.277800;11438.333300,42057.222200;11461.111100,43252.777800;11485.555600,43187.222200;11503.055600,42855.277800;11511.388900,42106.388900;11522.222200,42841.944400;11569.444400,43136.666700;11583.333300,43150.000000;11595.000000,43148.055600;11600.000000,43150.000000;11690.555600,42686.666700;11715.833300,41836.111100;11751.111100,42814.444400;11770.277800,42651.944400;11785.277800,42884.444400;11822.777800,42673.611100;11846.944400,42660.555600;11963.055600,43290.555600;11973.055600,43026.111100;12058.333300,42195.555600;12149.444400,42477.500000;12286.944400,43355.555600;12300.000000,42433.333300;12355.833300,43156.388900;12363.333300,43189.166700;12372.777800,42711.388900;12386.666700,43334.722200;12421.666700,42895.555600;12645.000000,42973.333300];
+n = size(coord,1);  % 城市的数目
+
+
+figure  % 新建一个图形窗口
+plot(coord(:,1),coord(:,2),'o');   % 画出城市的分布散点图
+hold on % 等一下要接着在这个图形上画图的
+
+d = zeros(n);   % 初始化两个城市的距离矩阵全为0
+for i = 2:n  
+    for j = 1:i  
+        coord_i = coord(i,:);   x_i = coord_i(1);     y_i = coord_i(2);  % 城市i的横坐标为x_i，纵坐标为y_i
+        coord_j = coord(j,:);   x_j = coord_j(1);     y_j = coord_j(2);  % 城市j的横坐标为x_j，纵坐标为y_j
+        d(i,j) = sqrt((x_i-x_j)^2 + (y_i-y_j)^2);   % 计算城市i和j的距离
+    end
+end
+d = d+d';   % 生成距离矩阵的对称的一面
+
+
+%% 参数初始化
+T0 = 1000;   % 初始温度
+T = T0; % 迭代中温度会发生改变，第一次迭代时温度就是T0
+maxgen = 1000;  % 最大迭代次数
+Lk = 500;  % 每个温度下的迭代次数
+alpfa = 0.95;  % 温度衰减系数
+
+%%  随机生成一个初始解
+path0 = randperm(n);  % 生成一个1-n的随机打乱的序列作为初始的路径
+result0 = calculate_tsp_d(path0,d); % 调用我们自己写的calculate_tsp_d函数计算当前路径的距离
+
+%% 定义一些保存中间过程的量，方便输出结果和画图
+min_result = result0;     % 初始化找到的最佳的解对应的距离为result0
+RESULT = zeros(maxgen,1); % 记录每一次外层循环结束后找到的min_result (方便画图）
+
+%% 模拟退火过程
+for iter = 1 : maxgen  % 外循环, 我这里采用的是指定最大迭代次数
+    for i = 1 : Lk  %  内循环，在每个温度下开始迭代
+        path1 = gen_new_path(path0);  % 调用我们自己写的gen_new_path函数生成新的路径
+        result1 = calculate_tsp_d(path1,d); % 计算新路径的距离
+        %如果新解距离短，则直接把新解的值赋值给原来的解
+        if result1 < result0    
+            path0 = path1; % 更新当前路径为新路径
+            result0 = result1; 
+        else
+            p = exp(-(result1 - result0)/T); % 根据Metropolis准则计算一个概率
+            if rand(1) < p   % 生成一个随机数和这个概率比较，如果该随机数小于这个概率
+                path0 = path1;  % 更新当前路径为新路径
+                result0 = result1; 
+            end
+        end
+        % 判断是否要更新找到的最佳的解
+        if result0 < min_result  % 如果当前解更好，则对其进行更新
+            min_result = result0;  % 更新最小的距离
+            best_path = path0;  % 更新找到的最短路径
+        end
+    end
+    RESULT(iter) = min_result; % 保存本轮外循环结束后找到的最小距离
+    T = alpfa*T;   % 温度下降       
+end
+
+
+disp('最佳的方案是：'); disp(mat2str(best_path))
+disp('此时最优值是：'); disp(min_result)
+
+
+best_path = [best_path,best_path(1)];   % 在最短路径的最后面加上一个元素，即第一个点（我们要生成一个封闭的图形）
+n = n+1;  % 城市的个数加一个（紧随着上一步）
+for i = 1:n-1 
+    j = i+1;
+    coord_i = coord(best_path(i),:);   x_i = coord_i(1);     y_i = coord_i(2); 
+    coord_j = coord(best_path(j),:);   x_j = coord_j(1);     y_j = coord_j(2);
+    plot([x_i,x_j],[y_i,y_j],'-b')    % 每两个点就作出一条线段，直到所有的城市都走完
+%     pause(0.02)  % 暂停0.02s再画下一条线段
+    hold on
+end
+
+%% 画出每次迭代后找到的最短路径的图形
+figure
+plot(1:maxgen,RESULT,'b-');
+xlabel('迭代次数');
+ylabel('最短路径');
+toc
+%计算目标函数
+function  result =  calculate_tsp_d(path,d)
+% 输入：path:路径（1至n的一个序列），d：距离矩阵
+    n = length(path);
+    result = 0; % 初始化该路径走的距离为0
+    for i = 1:n-1  
+        result = d(path(i),path(i+1)) + result;  % 按照这个序列不断的更新走过的路程这个值
+    end   
+    result = d(path(1),path(n)) + result;  % 别忘了加上从最后一个城市返回到最开始那个城市的距离
+end
+%产生新的解过程
+function path1 = gen_new_path(path0)
+    % path0: 原来的路径
+    n = length(path0);
+    % 随机选择两种产生新路径的方法
+    p1 = 0.33;  % 使用交换法产生新路径的概率
+    p2 = 0.33;  % 使用移位法产生新路径的概率
+    r = rand(1); % 随机生成一个[0 1]间均匀分布的随机数
+    if  r< p1    % 使用交换法产生新路径 
+        c1 = randi(n);   % 生成1-n中的一个随机整数
+        c2 = randi(n);   % 生成1-n中的一个随机整数
+        path1 = path0;  % 将path0的值赋给path1
+        path1(c1) = path0(c2);  %改变path1第c1个位置的元素为path0第c2个位置的元素
+        path1(c2) = path0(c1);  %改变path1第c2个位置的元素为path0第c1个位置的元素
+    elseif r < p1+p2 % 使用移位法产生新路径
+        c1 = randi(n);   % 生成1-n中的一个随机整数
+        c2 = randi(n);   % 生成1-n中的一个随机整数
+        c3 = randi(n);   % 生成1-n中的一个随机整数
+        sort_c = sort([c1 c2 c3]);  % 对c1 c2 c3从小到大排序
+        c1 = sort_c(1);  c2 = sort_c(2);  c3 = sort_c(3);  % c1 < = c2 <=  c3
+        tem1 = path0(1:c1-1);
+        tem2 = path0(c1:c2);
+        tem3 = path0(c2+1:c3);
+        tem4 = path0(c3+1:end);
+        path1 = [tem1 tem3 tem2 tem4];
+    else  % 使用倒置法产生新路径
+        c1 = randi(n);   % 生成1-n中的一个随机整数
+        c2 = randi(n);   % 生成1-n中的一个随机整数
+        if c1>c2  % 如果c1比c2大，就交换c1和c2的值
+            tem = c2;
+            c2 = c1;
+            c1 = tem;
+        end
+        tem1 = path0(1:c1-1);
+        tem2 = path0(c1:c2);
+        tem3 = path0(c2+1:end);
+        path1 = [tem1 fliplr(tem2) tem3];   %矩阵的左右对称翻转 fliplr，上下对称翻转 flipud
+    end
+end
+%若是计算特定的城市例如5到20 计算结果6636
+path0=（1 2 3 4 6 7 8.......38）
+xulie=randperm(size(path0(2)))%打乱顺序
+path0=path0（xulie）;
+则可以设path00=（5，path0，20）
+另外计算距离的地方要减去最开始到最后的距离，不用回到最开始的地方
+
+%无约束的mtsp问题，这里只编写了两个旅行商的
+clc,clear
+tic
+rng('shuffle')  % 控制随机数的生成，否则每次打开matlab得到的结果都一样
+% https://ww2.mathworks.cn/help/matlab/math/why-do-random-numbers-repeat-after-startup.html
+% https://ww2.mathworks.cn/help/matlab/ref/rng.html
+clear;clc
+% 38个城市，TSP数据集网站(http://www.tsp.gatech.edu/world/djtour.html) 上公测的最优结果6656。
+coord = [11003.611100,42102.500000;11108.611100,42373.888900;11133.333300,42885.833300;11155.833300,42712.500000;11183.333300,42933.333300;11297.500000,42853.333300;11310.277800,42929.444400;11416.666700,42983.333300;11423.888900,43000.277800;11438.333300,42057.222200;11461.111100,43252.777800;11485.555600,43187.222200;11503.055600,42855.277800;11511.388900,42106.388900;11522.222200,42841.944400;11569.444400,43136.666700;11583.333300,43150.000000;11595.000000,43148.055600;11600.000000,43150.000000;11690.555600,42686.666700;11715.833300,41836.111100;11751.111100,42814.444400;11770.277800,42651.944400;11785.277800,42884.444400;11822.777800,42673.611100;11846.944400,42660.555600;11963.055600,43290.555600;11973.055600,43026.111100;12058.333300,42195.555600;12149.444400,42477.500000;12286.944400,43355.555600;12300.000000,42433.333300;12355.833300,43156.388900;12363.333300,43189.166700;12372.777800,42711.388900;12386.666700,43334.722200;12421.666700,42895.555600;12645.000000,42973.333300];
+n = size(coord,1);  % 城市的数目
+
+
+figure  % 新建一个图形窗口
+plot(coord(:,1),coord(:,2),'o');   % 画出城市的分布散点图
+hold on % 等一下要接着在这个图形上画图的
+
+d = zeros(n);   % 初始化两个城市的距离矩阵全为0
+for i = 2:n  
+    for j = 1:i  
+        coord_i = coord(i,:);   x_i = coord_i(1);     y_i = coord_i(2);  % 城市i的横坐标为x_i，纵坐标为y_i
+        coord_j = coord(j,:);   x_j = coord_j(1);     y_j = coord_j(2);  % 城市j的横坐标为x_j，纵坐标为y_j
+        d(i,j) = sqrt((x_i-x_j)^2 + (y_i-y_j)^2);   % 计算城市i和j的距离
+    end
+end
+d = d+d';   % 生成距离矩阵的对称的一面
+
+
+%% 参数初始化
+T0 = 100;   % 初始温度
+T = T0; % 迭代中温度会发生改变，第一次迭代时温度就是T0
+maxgen = 200;  % 最大迭代次数
+Lk =500;  % 每个温度下的迭代次数
+alpfa = 0.95;  % 温度衰减系数
+
+%%  随机生成一个初始解
+path0 = randperm(n);  % 生成一个1-n的随机打乱的序列作为初始的路径
+kk=find(path0==4);%这里考虑两个旅行商问题，起点城市为4号城市
+if kk~=1
+   path01=[4,path0(1,1:kk-1)];%第一个旅行商路径
+   path02=path0(1,kk:end);%第二个旅行商路径
+else
+   path01=[4,4];%这里即表示第一个旅行商没有出门
+   path02=path0;%第二旅行商走完全程，转化为单旅行商问题
+end
+result01 = calculate_tsp_d(path01,d); % 调用我们自己写的calculate_tsp_d函数计算当前路径的距离
+result02=calculate_tsp_d(path02,d);
+result0=result01+result02;
+%% 定义一些保存中间过程的量，方便输出结果和画图
+RESULT = zeros(maxgen,1); % 记录每一次外层循环结束后找到的min_result (方便画图）
+
+%% 模拟退火过程
+for iter = 1 : maxgen  % 外循环, 我这里采用的是指定最大迭代次数
+    for i = 1 : Lk  %  内循环，在每个温度下开始迭代
+        path1 = gen_new_path(path0);  % 调用我们自己写的gen_new_path函数生成新的路径
+        kk1=find(path1==4);
+        if kk1~=1
+           path11=[4,path1(1,1:kk1-1)];
+           path12=path1(1,kk1:end);
+        else
+           path11=[4,4];
+           path12=path1;
+        end
+        result11 = calculate_tsp_d(path11,d); % 调用我们自己写的calculate_tsp_d函数计算当前路径的距离
+        result12=calculate_tsp_d(path12,d);
+        result1 = result11+result12; % 计算新路径的距离
+        %如果新解距离短，则直接把新解的值赋值给原来的解
+        if result1 < result0    
+             path01 = path11;  % 更新当前路径为新路径
+             path02=path12; % 更新当前路径为新路径
+             %这里更新path0这样产生的新解才和前面的解有联系
+             if length(path01)==2
+                  path0=path02;
+             else
+                 path0=[path01(1,2:end),path02];
+             end
+            result0 = result1; 
+        else
+            p = exp(-(result1 - result0)/T); % 根据Metropolis准则计算一个概率
+            if rand(1) < p   % 生成一个随机数和这个概率比较，如果该随机数小于这个概率
+                path01 = path11;  % 更新当前路径为新路径
+                path02=path12;
+                if length(path01)==2
+                   path0=path02;
+                else
+                   path0=[path01(1,2:end),path02];
+                end
+                result0 = result1; 
+            end
+        end
+       
+    end
+    RESULT(iter) = result0; % 保存本轮外循环结束后找到的最小距离
+    T = alpfa*T;   % 温度下降       
+end
+
+
+disp('最佳的方案是：'); 
+path01
+path02
+disp('此时最优值是：'); disp(result0)
+
+path01=[path01,4];
+path02=[path02,4];
+n1=length(path01);
+n2=length(path02);
+for i = 1:n1-1 
+    j = i+1;
+    coord_i = coord(path01(i),:);   x_i = coord_i(1);     y_i = coord_i(2); 
+    coord_j = coord(path01(j),:);   x_j = coord_j(1);     y_j = coord_j(2);
+    plot([x_i,x_j],[y_i,y_j],'-b')    % 每两个点就作出一条线段，直到所有的城市都走完
+    pause(0.02)  % 暂停0.02s再画下一条线段
+    hold on
+end
+hold on
+for i = 1:n2-1 
+    j = i+1;
+    coord_i = coord(path02(i),:);   x_i = coord_i(1);     y_i = coord_i(2); 
+    coord_j = coord(path02(j),:);   x_j = coord_j(1);     y_j = coord_j(2);
+    plot([x_i,x_j],[y_i,y_j],'-r')    % 每两个点就作出一条线段，直到所有的城市都走完
+    pause(0.02)  % 暂停0.02s再画下一条线段
+    hold on
+end
+%% 画出每次迭代后找到的最短路径的图形
+figure
+plot(1:maxgen,RESULT,'b-');
+xlabel('迭代次数');
+ylabel('最短路径');
+toc
