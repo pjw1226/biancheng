@@ -1,0 +1,62 @@
+%排队论
+clc,clear
+nn=zeros(1,100);%模拟100天
+tt=zeros(1,100);%模拟100天
+for ii=1:100
+c0=0;
+e0=0;
+i=1;
+c(1)=exprnd(10);%第一个客户到达时间
+b(1)=c(1);%第一个客户开始服务时间
+a=0;%总等待时间
+while b(i)<=480
+y(i)=normrnd(10,2);%第i个客户的服务持续时间
+if y(i)<1
+   y(i)=1;
+end
+e(i)=b(i)+y(i);%第i个客户的结束时间
+i=i+1;
+xi=exprnd(10);%间隔时间
+c(i)=c(i-1)+xi;
+b(i)=max([e(i-1),c(i)]);
+a=a+b(i)-c(i);
+end
+n=i-1;%由于第i个人服务开始时间已超过不算
+a=a-b(i)+c(i);%第i个人的等待时间也不考虑
+t=a/(n);
+tt(ii)=t;
+nn(ii)=n;
+end
+mean(nn)
+mean(tt)
+
+%作业4 
+clc,clear
+t1=0;%第一种策略的初始时间
+m1=40;%第一种策略的花费
+t2=0;%第二种策略的初始时间
+m2=40;%第二种策略的初始花费
+T=100000000;
+%%第一种策略
+life=randi([1000,2000],1,4);
+while t1<T
+      t11=min(life);
+      k=find(life==t11);%发现损坏的灯泡序号
+      len=length(k);%同时损坏的个数
+      %这里考虑同时坏4个花费的时间为4h
+      t1=t11+t1+len;%更新时间
+      m1=m1+20*len+10*length(k);%更新花费
+      life=life-(t11+len)*ones(1,4);%更新未损坏的灯泡寿命
+      for ii=1:len
+      life(k(ii))=randi([1000,2000],1);%更换损坏的灯泡的寿命
+      end
+end
+%%第二种策略
+while t2<T
+    r=randi([1000,2000],1,4);
+    r1=min(r);
+    t2=t2+r1+2;
+    m2=m2+80;
+end
+m1
+m2
